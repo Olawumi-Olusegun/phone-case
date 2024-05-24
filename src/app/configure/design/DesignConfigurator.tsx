@@ -12,7 +12,7 @@ import { COLORS, FINISHES, MATERIALS, MODELS } from '@/validators/option-validat
 import { Label } from '@/components/ui/label';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckIcon, ChevronDown } from 'lucide-react';
+import { ArrowRight, CheckIcon, ChevronDown, Loader2 } from 'lucide-react';
 import { formatPrice } from '@/lib/formatPrice';
 import { BASE_PRICE } from '@/config/product';
 import { useUploadThing } from '@/lib/uploadthing';
@@ -64,18 +64,19 @@ function DesignConfigurator({ configId, imageUrl, imageDimensions}: DesignConfig
 
   const router = useRouter();
 
-  const { mutate: saveConfig } = useMutation({
+  const { mutate: saveConfig, isPending } = useMutation({
     mutationKey: ["save-config"],
     mutationFn: async (args: SaveConfigProps) => {
       await Promise.all([saveConfiguration(), _saveConfig(args)])
     },
-    onError: () => {
+    onError: (error) => {
+      console.log({error})
       toast.error("Something went wrong", {
         description: "There was an error on your end. Please try again"
       })
     },
     onSuccess: () => {
-      router.push(`/configure/preview/${configId}`)
+      router.push(`/configure/preview?id=${configId}`)
     }
   });
 
@@ -119,8 +120,8 @@ function DesignConfigurator({ configId, imageUrl, imageDimensions}: DesignConfig
 
     } catch (error) {
       toast.error("Something went wrong", {
-        description: "There was a propblem saving your config, please try again"
-      })
+        description: "There was a problem saving your config, please try again"
+      });
     }
   }
 
@@ -296,7 +297,9 @@ function DesignConfigurator({ configId, imageUrl, imageDimensions}: DesignConfig
               <div className="w-full flex gap-6 items-center">
                 <p className="font-medium whitespace-nowrap">{formatPrice((BASE_PRICE + options.finish.price + options.material.price) / 100)}</p>
                 
-                <Button onClick={() => saveConfig({
+                <Button 
+                  disabled={isPending}
+                onClick={() => saveConfig({
                   configId,
                   color: options.color.value,
                   finish: options.finish.value,
@@ -304,12 +307,12 @@ function DesignConfigurator({ configId, imageUrl, imageDimensions}: DesignConfig
                   model: options.model.value
                   })} 
                   size="sm" 
-                  className="w-full"
+                  className="w-full group"
                   >
-                    Continue
-                    <ArrowRight className="h-4 w-4 " />
+                    { isPending ? "Please wait..." : "Continue" }
+                    { isPending ? <Loader2 className='h-4 w-4 animate-spin' /> : <ArrowRight className="h-4 w-4 group-hover:ml-1 duration-300" />}
                 </Button>
-                
+
               </div>
             </div>
         </div>

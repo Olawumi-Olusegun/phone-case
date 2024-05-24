@@ -1,12 +1,19 @@
 "use client";
 
 import Phone from '@/components/Phone';
+import { Button } from '@/components/ui/button';
+import { BASE_PRICE, PRODUCT_PRICES } from '@/config/product';
+import { formatPrice } from '@/lib/formatPrice';
 import { cn } from '@/lib/utils';
 import { COLORS, MODELS } from '@/validators/option-validator';
 import { Configuration } from '@prisma/client';
-import { Check } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { ArrowRight, Check } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
 import Confetti from "react-dom-confetti"
+import { createCheckoutSession } from './actions';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 type Props = {
     configuration: Configuration;
@@ -16,9 +23,40 @@ function DesignPreview({configuration}: Props) {
 
     const [showConfetti, setShowConfetti] = useState(false);
 
-    const {color, model } = configuration;
+    const {color, model, finish, material } = configuration;
     const tw = COLORS.find((supportedColor) => supportedColor.value === color)?.tw;
     const { label: modelLabel } = MODELS.options.find(({value}) => value === model)!;
+
+    const router = useRouter();
+
+    const {mutate: createCheckoutSessionMutation} = useMutation({
+        mutationKey: ["get-checkout-session"],
+        mutationFn: createCheckoutSession,
+        onError: (error) => {
+            return toast.error("Something went wrong", {
+                description: "Payment could not be made from your end"
+            })
+        },
+        onSuccess: ({url}) => {
+            if(url) {
+                router.push(url)
+            }else {
+                throw new Error("Unable to retrieve payment url")
+            }
+        }
+    })
+
+    let totalPrice = BASE_PRICE;
+
+    if(material === "polycarbonate") {
+        totalPrice += PRODUCT_PRICES.material.polycarbonate
+    } 
+
+    if(finish === "textured") {
+        totalPrice += PRODUCT_PRICES.finish.textured
+    }
+
+    const handleCheckoutPayment = () => createCheckoutSessionMutation({configId: configuration.id});
 
     useEffect(() => {
         setShowConfetti(true)
@@ -29,7 +67,7 @@ function DesignPreview({configuration}: Props) {
     <div className='pointer-events-none absolute inset-0 overflow-hidden flex justify-center'>
         <Confetti active={showConfetti} config={{ elementCount: 200, spread: 90 }} />
     </div>
-    <div className="mt-20 grid grid-cols-1 text-sm sm:grid-cols-12 sm:grid-rows-1 sm: gap-x-6 md:gap-x-8 lg:gap-x-12">
+    <div className="my-20 grid grid-cols-1 text-sm sm:grid-cols-12 sm:grid-rows-1 sm: gap-x-6 md:gap-x-8 lg:gap-x-12">
         <div className="sm:col-span-4 md:col-span-3 md:row-span-2 md:row-end-2">
             <Phone className={cn(`bg-${tw}`)} imgSrc={configuration.croppedImageUrl!}  />
         </div>
@@ -48,7 +86,52 @@ function DesignPreview({configuration}: Props) {
                         <li>Wireless charging compatible</li>
                         <li>TPU shock absorption</li>
                         <li>TPU shock absorption</li>
+                        <li>Packaging made from recycled materials </li>
+                        <li>5 years print warranty</li>
                     </ol>
+                </div>
+                <div className="">
+                    <p className='font-medium text-zinc-950'>Materials</p>
+                    <ol className="mt-3 text-zinc-700 list-disc list-inside">
+                        <li>High-quality, duration materials</li>
+                        <li>Scratch and finger printresistant coating</li>
+                    </ol>
+                </div>
+            </div>
+            <div className="mt-8">
+                <div className="bg-gray-50 p-6 sm:rounded-lg sm:p-8 ">
+                    <div className="flow-root text-sm ">
+                        <div className="flex items-center justify-between py-1 mt-2">
+                            <p className="text-gray-600">Base Price</p>
+                            <p className="text-gray-900 font-medium">{formatPrice(BASE_PRICE/100)}</p>
+                        </div>
+                        
+                        {finish === "textured" ? (
+                        <div className="flex items-center justify-between py-1 mt-2">
+                            <p className="text-gray-600">Textured Finished</p>
+                            <p className="text-gray-900 font-medium">{formatPrice(PRODUCT_PRICES.finish.textured /100)}</p>
+                        </div> 
+                        ) : null }
+
+                        {material === "polycarbonate" ? (
+                        <div className="flex items-center justify-between py-1 mt-2">
+                            <p className="text-gray-600">Soft polycarbonate material</p>
+                            <p className="text-gray-900 font-medium">{formatPrice(PRODUCT_PRICES.material.polycarbonate /100)}</p>
+                        </div> 
+                        ) : null }
+                        <div className='my-2 h-px bg-gray-200' />
+                        <div className="flex items-center justify-between py-2">
+                            <p className="font-semibold text-gray-900">Order Total</p>
+                            <p className="font-semibold text-gray-900 ">
+                                {formatPrice(totalPrice / 100)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div className="mt-8 flex justify-end pb-12">
+                    <Button onClick={handleCheckoutPayment} className='px-4 sm:px-6 lg:px-8 group'>
+                        Check out <ArrowRight className="h-4 w-4 inline group-hover:pr-1 duration-300" />
+                    </Button>
                 </div>
             </div>
         </div>

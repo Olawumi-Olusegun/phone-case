@@ -19,7 +19,6 @@ async function PreviewPage({searchParams}: Props) {
 
     const configuration = await prismadb.configuration.findUnique({
         where: { id },
-
     });
 
     if(!configuration) {
