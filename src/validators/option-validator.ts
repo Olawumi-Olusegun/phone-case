@@ -54,22 +54,22 @@ export const MODELS = {
 
 
 export const MATERIALS = {
-    name: 'material',
-    options: [
-      {
-        label: 'Silicone',
-        value: 'silicone',
-        description: undefined,
-        price: PRODUCT_PRICES.material.silicone,
-      },
-      {
-        label: 'Soft Polycarbonate',
-        value: 'polycarbonate',
-        description: 'Scratch-resistant coating',
-        price: PRODUCT_PRICES.material.polycarbonate,
-      },
-    ],
-  } as const
+  name: 'material',
+  options: [
+    {
+      label: 'Silicone',
+      value: 'silicone',
+      description: undefined,
+      price: PRODUCT_PRICES.material.silicone,
+    },
+    {
+      label: 'Soft Polycarbonate',
+      value: 'polycarbonate',
+      description: 'Scratch-resistant coating',
+      price: PRODUCT_PRICES.material.polycarbonate,
+    },
+  ],
+} as const
   
   export const FINISHES = {
     name: 'finish',

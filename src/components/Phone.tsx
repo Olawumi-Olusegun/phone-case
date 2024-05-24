@@ -16,7 +16,7 @@ function Phone({className, imgSrc, dark = false, ...props}: PhoneProps) {
         className='pointer-events-none z-50 '
         />
         <div className="absolute -z-10 inset-0">
-            <img src={imgSrc} alt="overlaying-phone" className='object-cover pointer-events-none' />
+            <img src={imgSrc} alt="overlaying-phone" className='object-cover min-w-full min-h-full pointer-events-none' />
         </div>
     </div>
   )

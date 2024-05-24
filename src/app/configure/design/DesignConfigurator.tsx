@@ -17,6 +17,9 @@ import { formatPrice } from '@/lib/formatPrice';
 import { BASE_PRICE } from '@/config/product';
 import { useUploadThing } from '@/lib/uploadthing';
 import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
+import { SaveConfigProps, saveConfig as _saveConfig } from './action';
+import { useRouter } from 'next/navigation';
 
 type DesignConfiguratorProps = {
   configId: string;
@@ -57,7 +60,24 @@ function DesignConfigurator({ configId, imageUrl, imageDimensions}: DesignConfig
   const phoneCaseRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const {startUpload} = useUploadThing("imageUploader")
+  const {startUpload} = useUploadThing("imageUploader");
+
+  const router = useRouter();
+
+  const { mutate: saveConfig } = useMutation({
+    mutationKey: ["save-config"],
+    mutationFn: async (args: SaveConfigProps) => {
+      await Promise.all([saveConfiguration(), _saveConfig(args)])
+    },
+    onError: () => {
+      toast.error("Something went wrong", {
+        description: "There was an error on your end. Please try again"
+      })
+    },
+    onSuccess: () => {
+      router.push(`/configure/preview/${configId}`)
+    }
+  });
 
   async function saveConfiguration() {
 
@@ -94,7 +114,9 @@ function DesignConfigurator({ configId, imageUrl, imageDimensions}: DesignConfig
 
       const file = new File([blob], "filename.png", {type: "image/png"});
 
-      await startUpload([file], {configId})
+      await startUpload([file], {configId});
+      
+
     } catch (error) {
       toast.error("Something went wrong", {
         description: "There was a propblem saving your config, please try again"
@@ -273,9 +295,21 @@ function DesignConfigurator({ configId, imageUrl, imageDimensions}: DesignConfig
             <div className="w-full h-full flex justify-end items-center">
               <div className="w-full flex gap-6 items-center">
                 <p className="font-medium whitespace-nowrap">{formatPrice((BASE_PRICE + options.finish.price + options.material.price) / 100)}</p>
-                <Button size="sm" className="w-full">
-                  Continue <ArrowRight className="h-4 w-4 " />
+                
+                <Button onClick={() => saveConfig({
+                  configId,
+                  color: options.color.value,
+                  finish: options.finish.value,
+                  material: options.material.value,
+                  model: options.model.value
+                  })} 
+                  size="sm" 
+                  className="w-full"
+                  >
+                    Continue
+                    <ArrowRight className="h-4 w-4 " />
                 </Button>
+                
               </div>
             </div>
         </div>
