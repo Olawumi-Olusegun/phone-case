@@ -1,0 +1,45 @@
+
+import React, { type Dispatch, type SetStateAction } from 'react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import Image from 'next/image';
+import { LoginLink, RegisterLink } from '@kinde-oss/kinde-auth-nextjs';
+import { buttonVariants } from './ui/button';
+
+type Props = {
+    isOpen: boolean;
+    setIsOpen: Dispatch<SetStateAction<boolean>>
+}
+
+function LoginModal({isOpen, setIsOpen}: Props) {
+  return (
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
+       
+        <DialogContent className='z-[999999]'>
+            <DialogHeader>
+                <div className="relative mx-auto w-24 h-24 mb-2">
+                    <Image src={"/snake-1.png"} className='object-contain' alt='snake image' fill />
+                </div>
+                <DialogTitle className='text-3xl text-center font-bold tracking-tight text-gray-900 '>Login to continue</DialogTitle>
+                <DialogDescription className='text-base text-center py-2 '>
+                    <span className="font-medium text-zinc-900">
+                        Your configuration was saved
+                    </span>
+                    {" "} please login or create an account to complete your purchase
+                </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-6 divide-x divide-gray-200">
+                <LoginLink className={buttonVariants({variant: "outline"})}>
+                    Login
+                </LoginLink>
+
+                <RegisterLink className={buttonVariants({variant: "default"})}>
+                    Sign Up
+                </RegisterLink>
+            </div>
+        </DialogContent>
+
+    </Dialog>
+  )
+}
+
+export default LoginModal

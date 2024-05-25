@@ -14,6 +14,9 @@ import Confetti from "react-dom-confetti"
 import { createCheckoutSession } from './actions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs"
+import LoginModal from '@/components/LoginModal';
+
 
 type Props = {
     configuration: Configuration;
@@ -22,10 +25,13 @@ type Props = {
 function DesignPreview({configuration}: Props) {
 
     const [showConfetti, setShowConfetti] = useState(false);
+    const [loginModalOpen, setLoginModalOpen] = useState(false);
 
     const {color, model, finish, material } = configuration;
     const tw = COLORS.find((supportedColor) => supportedColor.value === color)?.tw;
     const { label: modelLabel } = MODELS.options.find(({value}) => value === model)!;
+
+    const {user, isLoading } = useKindeBrowserClient()
 
     const router = useRouter();
 
@@ -56,7 +62,16 @@ function DesignPreview({configuration}: Props) {
         totalPrice += PRODUCT_PRICES.finish.textured
     }
 
-    const handleCheckoutPayment = () => createCheckoutSessionMutation({configId: configuration.id});
+ 
+    const handleCheckout = () => {
+
+        if(user) {
+            createCheckoutSessionMutation({configId: configuration.id})
+        } else {
+            localStorage.setItem("configurationId", configuration.id);
+            setLoginModalOpen(true)
+        }
+    }
 
     useEffect(() => {
         setShowConfetti(true)
@@ -67,6 +82,7 @@ function DesignPreview({configuration}: Props) {
     <div className='pointer-events-none absolute inset-0 overflow-hidden flex justify-center'>
         <Confetti active={showConfetti} config={{ elementCount: 200, spread: 90 }} />
     </div>
+    <LoginModal isOpen={loginModalOpen} setIsOpen={setLoginModalOpen} />
     <div className="my-20 grid grid-cols-1 text-sm sm:grid-cols-12 sm:grid-rows-1 sm: gap-x-6 md:gap-x-8 lg:gap-x-12">
         <div className="sm:col-span-4 md:col-span-3 md:row-span-2 md:row-end-2">
             <Phone className={cn(`bg-${tw}`)} imgSrc={configuration.croppedImageUrl!}  />
@@ -129,7 +145,7 @@ function DesignPreview({configuration}: Props) {
                     </div>
                 </div>
                 <div className="mt-8 flex justify-end pb-12">
-                    <Button onClick={handleCheckoutPayment} className='px-4 sm:px-6 lg:px-8 group'>
+                    <Button onClick={handleCheckout} className='px-4 sm:px-6 lg:px-8 group'>
                         Check out <ArrowRight className="h-4 w-4 inline group-hover:pr-1 duration-300" />
                     </Button>
                 </div>

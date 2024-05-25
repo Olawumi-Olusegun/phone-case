@@ -12,12 +12,14 @@ export const createCheckoutSession = async ({configId}: {configId: string}) => {
         where: { id: configId }
     });
 
+
     if(!configuration) {
         throw new Error("No such configuration found");
     }
 
     const { getUser } = getKindeServerSession();
     const user = await getUser();
+
 
     if(!user) {
         throw new Error("You need to be logged in");
@@ -66,7 +68,7 @@ export const createCheckoutSession = async ({configId}: {configId: string}) => {
     });
 
     const stripeSession = await stripe.checkout.sessions.create({
-        payment_method_types: ["card", "paypal"],
+        payment_method_types: ["card"],
         mode: "payment",
         shipping_address_collection: {
             allowed_countries: ["NG", "US",]
@@ -84,6 +86,8 @@ export const createCheckoutSession = async ({configId}: {configId: string}) => {
         success_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/thank-you?orderId=${order.id}`,
         cancel_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/configure/preview?id=${order.id}`,
     });
+
+    console.log(stripeSession.url)
 
     return {url: stripeSession.url}
 }
