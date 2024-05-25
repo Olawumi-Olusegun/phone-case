@@ -1,7 +1,12 @@
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { formatPrice } from '@/lib/formatPrice';
 import prismadb from '@/lib/prismadb';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server'
 import { redirect } from 'next/navigation';
 import React from 'react'
+import StatusDropDown from './StatusDropDown';
 
 type Props = {}
 
@@ -46,9 +51,94 @@ async function DashboardPage({}: Props) {
         }
     });
 
+    const lastMonthSum = await prismadb.order.aggregate({
+        where: {
+            isPaid: true,
+            createdAt: {
+                gte: new Date(new Date().setDate(new Date().getDate() - 30 ))
+            }
+        },
+        _sum: {
+            amount: true,
+        }
+    });
+
+    const WEEK_GOAL = 500;
+    const MONTHLY_GOAL = 2500;
+
   return (
     <div className='flex min-h-screen w-full bg-muted/40'>
-        
+        <div className="max-w-7xl w-full mx-auto flex flex-col sm:gap-4 sm:py-4">
+            <div className="flex flex-col gap-16">
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <Card>
+                        <CardHeader className='pb-2'>
+                            <CardDescription>Last Week</CardDescription>
+                            <CardTitle className='text-4xl'>
+                                {formatPrice(lastWeekSum._sum.amount ?? 0)}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-sm text-muted-foreground">
+                                of {formatPrice(WEEK_GOAL)} goal
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Progress value={((lastWeekSum._sum.amount ?? 0) * 100 ) / WEEK_GOAL} />
+                        </CardFooter>
+                    </Card>
+                    <Card>
+                        <CardHeader className='pb-2'>
+                            <CardDescription>Last Month</CardDescription>
+                            <CardTitle className='text-4xl'>
+                                {formatPrice(lastMonthSum._sum.amount ?? 0)}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-sm text-muted-foreground">
+                                of {formatPrice(MONTHLY_GOAL)} goal
+                            </div>
+                        </CardContent>
+                        <CardFooter>
+                            <Progress value={((lastMonthSum._sum.amount ?? 0) * 100 ) / MONTHLY_GOAL} />
+                        </CardFooter>
+                    </Card>
+                </div>
+                <h1 className="text-4xl font-old tracking-tight">Incoming Orders</h1>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Customer</TableHead>
+                            <TableHead className='hidden sm:table-cell'>Status</TableHead>
+                            <TableHead className='hidden sm:table-cell'>Purchase Date</TableHead>
+                            <TableHead className='text-right'>Amount</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {
+                          orders && orders.map((order) => (
+                            <TableRow key={order.id} className='bg-accent'>
+                                <TableCell>
+                                    <div className="font-medium">
+                                        {order.shippingAddress?.name}
+                                    </div>
+                                    <div className="hidden text-sm text-muted-foreground md:inline">
+                                        {order.User.email}
+                                    </div>
+
+                                </TableCell>
+                                <TableCell className='hidden sm:table-cell'>
+                                    <StatusDropDown id={order.id} orderStatus={order.status} />
+                                </TableCell>
+                                <TableCell className='hidden sm:table-cell'>{order.createdAt.toLocaleDateString()}</TableCell>
+                                <TableCell className='text-right'>{formatPrice(order.amount)}</TableCell>
+                            </TableRow>
+                            ))
+                        }
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
     </div>
   )
 }

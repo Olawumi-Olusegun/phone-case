@@ -30,7 +30,7 @@ async function Navbar({}: Props) {
                                     {
                                         isAdmin 
                                         ? (
-                                            <Link href={"/api/auth/dashboard"} className={buttonVariants({size:"sm", variant: "ghost"})}>Dashboard</Link>
+                                            <Link href={"/dashboard"} className={buttonVariants({size:"sm", variant: "ghost"})}>Dashboard</Link>
                                         )
                                         : null
                                     }
