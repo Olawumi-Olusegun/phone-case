@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/components/Providers";
 import { constructMetaData } from "@/lib/constructMetaData";
 
-const inter = Recursive({ subsets: ["latin"] });
+const recursive = Recursive({ subsets: ["latin"] });
 
 export const metadata = constructMetaData()
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={recursive.className}>
         <Providers>
           <main className="w-full grainy-light min-h-[calc(100vh_-_3.5rem_-_1px)] flex flex-col ">
             <Navbar />
