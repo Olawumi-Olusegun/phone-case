@@ -3,6 +3,13 @@ import { stripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { Resend } from "resend";
+import OrderReceivedEmail from "@/components/emails/OrderReceivedEmail";
+
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+
 
 export async function POST(request: Request) {
 
@@ -13,6 +20,8 @@ export async function POST(request: Request) {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_KEY as string;
 
     let event: Stripe.Event;
+
+    console.log({body, signature, webhookSecret})
 
     if(!signature || !webhookSecret) {
         console.log("No webhookSecret/signature");
@@ -39,7 +48,9 @@ export async function POST(request: Request) {
             const billingAddress = session.customer_details!.address;
             const shippingAddress = session.shipping_details!.address;
 
-            await prismadb.order.update({
+            console.log({message: "about to update order"})
+
+         const updatedOrder = await prismadb.order.update({
                 where: {
                     id: orderId,
                 },
@@ -67,11 +78,31 @@ export async function POST(request: Request) {
                     },
                 }
             });
+
+            await resend.emails.send({
+                from: 'PhoneCase <onboarding@resend.dev>',
+                to: [session.customer_details.email as string],
+                subject: 'Thanks for your order',
+                react: OrderReceivedEmail({
+                    orderId, 
+                    orderDate: updatedOrder.createdAt.toLocaleDateString(),
+                    // @ts-ignore
+                    shippingAddress: {
+                        name: session.customer_details.name as string,
+                        city: shippingAddress?.city as string,
+                        country: shippingAddress?.country as string,
+                        street: shippingAddress?.line1 as string,
+                        postalCode: shippingAddress?.postal_code as string,
+                        state: shippingAddress?.state as string,
+                    }
+                }),
+            })
         }
 
         return NextResponse.json({ result: event, ok: true});
         
     } catch (error) {
+        console.log({error})
         return NextResponse.json({ message: "Something went wrong", ok: false});
     }
 }

@@ -5,14 +5,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "@/components/Providers";
+import { constructMetaData } from "@/lib/constructMetaData";
 
 const inter = Recursive({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "Phone Case",
-  description: "Create a custom phone case with your preferred image",
-};
-
+export const metadata = constructMetaData()
 export default function RootLayout({
   children,
 }: Readonly<{
